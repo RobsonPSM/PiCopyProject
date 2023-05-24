@@ -26,7 +26,6 @@ const ChapterUpdateScreen = () => {
     try {
       await updateChapter(chapterData);
       console.log('Chapter atualizado');
-      // Adicione aqui a lógica adicional após a atualização bem-sucedida do capítulo
     } catch (error) {
       console.error('Erro atualizando chapter:', error);
     }
