@@ -20,7 +20,7 @@ const RootLayout = () => {
       <Drawer screenOptions={{ headerShown: false }}>
         <Drawer.Screen name="(_tabs)" options={{ drawerLabel: 'Home' }} />
         <Drawer.Screen name="Forum" options={{ drawerLabel: 'Fórum' }} />
-        <Drawer.Screen name="Configuracoes" options={{ drawerLabel: 'Configurações' }}/>
+        <Drawer.Screen name="Configuracoes" options={{ drawerLabel: 'Configurações' }} />
       </Drawer>
     </AuthContext.Provider>
   )
