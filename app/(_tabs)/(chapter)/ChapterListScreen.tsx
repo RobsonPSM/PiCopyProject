@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { fetchChapters, deleteChapter } from '../../../core/services/ChapterService';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Modal, TextInput } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { fetchChapters, deleteChapter, updateChapter } from '../../../core/services/ChapterService';
 import { Chapter } from '../../../models/ChapterInterface';
 
 const ChapterListScreen = () => {
+  const navigation = useNavigation();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [isConfirmationModalVisible, setConfirmationModalVisible] = useState(false);
+  const [isEditModalVisible, setEditModalVisible] = useState(false);
+  const [editChapterName, setEditChapterName] = useState('');
+  const [editChapterDescription, setEditChapterDescription] = useState('');
 
   useEffect(() => {
     loadChapters();
@@ -18,6 +24,34 @@ const ChapterListScreen = () => {
       setChapters(chaptersData);
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleCreateChapter = () => {
+    navigation.navigate('ChapterCreate');
+  };
+
+  const handleEditChapter = (chapter: Chapter) => {
+    setSelectedChapter(chapter);
+    setEditChapterName(chapter.nome);
+    setEditChapterDescription(chapter.descricao);
+    setEditModalVisible(true);
+  };
+
+  const handleUpdateChapter = async () => {
+    if (selectedChapter) {
+      const updatedChapter: Chapter = {
+        ...selectedChapter,
+        nome: editChapterName,
+        descricao: editChapterDescription,
+      };
+      try {
+        await updateChapter(updatedChapter);
+        loadChapters();
+        setEditModalVisible(false);
+      } catch (error) {
+        console.error(error);
+      }
     }
   };
 
@@ -45,11 +79,17 @@ const ChapterListScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+       <TouchableOpacity onPress={handleCreateChapter}>
+        <Text style={styles.createButton}>Criar Capítulo</Text>
+      </TouchableOpacity>
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
         {chapters.map((chapter) => (
-          <View key={chapter.id} style={styles.card} >
+          <View key={chapter.id} style={styles.card}>
             <Text style={styles.title}>Nome: {chapter.nome}</Text>
             <Text style={styles.description}>Descrição: {chapter.descricao}</Text>
+            <TouchableOpacity onPress={() => handleEditChapter(chapter)}>
+              <Text style={styles.editButton}>Editar</Text>
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => handleDeleteChapter(chapter)}>
               <Text style={styles.deleteButton}>Excluir</Text>
             </TouchableOpacity>
@@ -57,14 +97,10 @@ const ChapterListScreen = () => {
         ))}
       </ScrollView>
 
-      <Modal
-        visible={isConfirmationModalVisible}
-        transparent
-        animationType="fade"
-      >
+      <Modal visible={isConfirmationModalVisible} transparent animationType="fade">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Deseja excluir o chapter "{selectedChapter?.nome}"?</Text>
+            <Text style={styles.modalText}>Deseja excluir o capítulo "{selectedChapter?.nome}"?</Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity onPress={confirmDeleteChapter}>
                 <Text style={styles.confirmButton}>Confirmar</Text>
@@ -76,6 +112,39 @@ const ChapterListScreen = () => {
           </View>
         </View>
       </Modal>
+
+      <Modal visible={isEditModalVisible} transparent animationType="fade">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Editar Capítulo</Text>
+            <TextInput
+              value={editChapterName}
+              onChangeText={setEditChapterName}
+              placeholder="Nome"
+              style={styles.input}
+            />
+            <TextInput
+              value={editChapterDescription}
+              onChangeText={setEditChapterDescription}
+              placeholder="Descrição"
+              style={styles.input}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity onPress={handleUpdateChapter}>
+                <Text style={styles.confirmButton}>Salvar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+                <Text style={styles.cancelButton}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <TouchableOpacity onPress={handleCreateChapter}>
+        <Text style={styles.createButton}>Criar Capítulo</Text>
+      </TouchableOpacity>
+
     </SafeAreaView>
   );
 };
@@ -139,6 +208,22 @@ const styles = StyleSheet.create({
   cancelButton: {
     color: 'red',
     fontWeight: 'bold',
+  },
+  editButton: {
+    color: 'blue',
+    fontWeight: 'bold',
+  },
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 12,
+    paddingHorizontal: 8,
+  },
+  createButton: {
+    color: 'green',
+    fontWeight: 'bold',
+    marginTop: 8,
   },
 });
 
